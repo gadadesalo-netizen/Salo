@@ -1,0 +1,124 @@
+mysql> create database library;
+Query OK, 1 row affected (0.02 sec)
+
+mysql> use library;
+Database changed
+mysql> create table brrower;
+ERROR 4028 (HY000): A table must have at least one visible column.
+mysql> create table brrower
+    -> (
+    -> rollno int,
+    -> name varchar(30),
+    -> dtaeofissue date,
+    -> ^C
+mysql> create table borrower
+    -> (
+    -> rollno int,
+    -> name varchar(30),
+    -> dateofissue date,
+    -> bookname varchar(20)
+    -> );
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> create table library_audit
+    -> (
+    -> rollno int,
+    -> name varchar(30),
+    -> dateofissue date,
+    -> bookname varchar(20)
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+
+
+mysql> insert into borrower values
+    -> (101,'ADITI','2024-01-15','DBMS'),
+    -> (102,'SIDDHI','2020-02-20','CNS'),
+    -> (103,'SANIYA','2023-04-16','TOC'),
+    -> (104,'SALONI','2025-07-28','SPM');
+Query OK, 4 rows affected (0.01 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+
+mysql> delimiter $$
+mysql> create trigger after_insert after insert on borrower for each row
+    -> begin
+    -> insert into library_audit values(new.rollno,new.name,new.dateofissue,new.bookname);
+    -> end;
+    -> $$
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> select * from borrower;
+    -> $$
++--------+--------+-------------+----------+
+| rollno | name   | dateofissue | bookname |
++--------+--------+-------------+----------+
+|    101 | ADITI  | 2024-01-15  | DBMS     |
+|    102 | SIDDHI | 2020-02-20  | CNS      |
+|    103 | SANIYA | 2023-04-16  | TOC      |
+|    104 | SALONI | 2025-07-28  | SPM      |
++--------+--------+-------------+----------+
+4 rows in set (0.00 sec)
+
+mysql> insert into borrower values
+    -> (105,'ADITYA','2024-05-23','SPOS');
+    -> $$
+\Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from library_audit;
+    -> $$
++--------+--------+-------------+----------+
+| rollno | name   | dateofissue | bookname |
++--------+--------+-------------+----------+
+|    105 | ADITYA | 2024-05-23  | SPOS     |
++--------+--------+-------------+----------+
+1 row in set (0.00 sec)
+
+mysql> delimiter $$
+mysql> create trigger after_delete after delete on borrower for each row
+    -> begin
+    -> insert into library_audit values(old.rollno,old.name,old.dateofissue,old.bookname);
+    -> end;
+    -> $$
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> delete from borrower where name='SALONI';
+    -> $$
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from library_audit;
+    -> $$
++--------+--------+-------------+----------+
+| rollno | name   | dateofissue | bookname |
++--------+--------+-------------+----------+
+|    105 | ADITYA | 2024-05-23  | SPOS     |
+|    104 | SALONI | 2025-07-28  | SPM      |
++--------+--------+-------------+----------+
+2 rows in set (0.00 sec)
+
+mysql> delimiter $$
+mysql> create trigger after_update after update on borrower for each row
+    -> begin
+    -> insert into library_audit values(new.rollno,new.name,new.dateofissue,new.bookname);
+    -> end;
+    -> $$
+Query OK, 0 rows affected (0.02 sec)
+
+
+
+mysql> update borrower
+    -> set name = 'OM'
+    -> where name = 'SANIYA';
+    -> $$
+Query OK, 1 row affected (0.01 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select * from library_audit;
+    -> $$
++--------+--------+-------------+----------+
+| rollno | name   | dateofissue | bookname |
++--------+--------+-------------+----------+
+|    105 | ADITYA | 2024-05-23  | SPOS     |
+|    104 | SALONI | 2025-07-28  | SPM      |
+|    103 | OM     | 2023-04-16  | TOC      |
++--------+--------+-------------+----------+
+3 rows in set (0.00 sec)
